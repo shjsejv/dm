@@ -1,0 +1,163 @@
+package prabhu;
+import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.Scanner;
+
+class Record_Csv1{
+    double attr1;
+    String attr2;
+    int Class_label;
+    Record_Csv1(){ }
+};
+public class NaiveBayes {
+    static Record_Csv1[] rc = new Record_Csv1[40]; 
+    public static void main(String[] args) throws FileNotFoundException, IOException
+    {
+       
+        double[] mean_var = new double[4];
+        double[] prob_cat = new double[10];
+        BufferedReader CSV =
+            new BufferedReader(new FileReader("C:/Users/NIVEDITHA D M/Desktop/nii.csv"));
+      String data = CSV.readLine();
+      data = CSV.readLine();
+      int i=0;
+      while((data != null))
+      {
+          rc[i]= new Record_Csv1();
+          String[] dataArray = data.split(",");
+          rc[i].attr1=Double.parseDouble(dataArray[0]);
+          rc[i].attr2=dataArray[1];
+          rc[i].Class_label = Integer.parseInt(dataArray[2]);
+           System.out.println("   "+rc[i].attr1+"   "+rc[i].attr2);
+          data = CSV.readLine();
+          i++;
+            }
+   
+    mean_var=Handle_numeric(i);
+ 
+    double c0=0, c1=0;
+    for(int j=0;j<i;j++)
+    {
+        if(rc[j].Class_label==0)
+            c0++;
+        else
+            c1++;
+    }
+        System.out.println("count 0 "+c0+" count 1 is "+c1);
+   prob_cat= Handle_Categorical(i,c0,c1);
+   
+   Scanner scan = new Scanner( System.in );
+   System.out.println("enter the value of the numeric attribute\n");
+   double new_attr1 = scan.nextDouble();
+   System.out.println("enter the value of the categorical attribute\n");
+   String new_attr2 = scan.next();
+   double prob_0=0,prob_1=0;
+   switch(new_attr2)
+   {
+       case "S": prob_0 = prob_cat[0];
+                 prob_1 = prob_cat[1];
+                 break;
+       case "M": prob_0 = prob_cat[2];
+                 prob_1 = prob_cat[3];
+                 break;
+       case "L":prob_0 = prob_cat[0];
+                 prob_1 = prob_cat[1];
+                 break;
+       default: System.out.println("Wrong entry");
+   }
+  
+   double gauss_0=0, gauss_1=0;
+   gauss_0 = 1*Math.exp(-(((new_attr1-mean_var[0])*(new_attr1-
+mean_var[0]))/2*mean_var[2]))/(Math.sqrt(2*3.14*mean_var[2]));
+   gauss_1 = 1*Math.exp(-(((new_attr1-mean_var[1])*(new_attr1-
+mean_var[1]))/2*mean_var[3]))/(Math.sqrt(2*3.14*mean_var[3]));        
+   double Prob_new_Class0 = gauss_0 * prob_0;
+   double Prob_new_Class1 = gauss_1 * prob_1;
+   System.out.println(" class 0 "+Prob_new_Class0+"  class 1 "+Prob_new_Class1);
+   if(Prob_new_Class0>Prob_new_Class1 )
+       System.out.println("New tuple belongs to class 0");
+   else
+       System.out.println("New tuple belongs to class 1");    
+}
+    static double[] Handle_numeric(int size)
+    {
+        
+        double sum1=0,sum2=0,count1=0,count2=0;
+        double[] mean_var = new double[4];
+        for(int i=0;i<size;i++)
+        {
+            System.out.println(" "+rc[i].attr1+" "+rc[i].Class_label);
+            if(rc[i].Class_label==0)
+            {sum1+=rc[i].attr1;
+            count1++;
+            }
+            else
+            {
+                sum2+=rc[i].attr1;
+                    count2++;
+        }
+    }
+        double mean1= sum1/count1;
+        double mean2= sum2/count2;
+        System.out.println("Mean is "+mean1+"for class 0"+" and "+mean2+" for class 1");
+      
+        sum1=sum2=0;
+        for(int i=0;i<size;i++)
+        {
+            if(rc[i].Class_label==0)
+                sum1+=Math.pow((rc[i].attr1-mean1),2);
+            else
+                sum2+=Math.pow((rc[i].attr1-mean2),2);
+        }
+        double var1= sum1/count1;
+        double var2= sum2/count2;
+        System.out.println("Var is "+var1+" for class 0"+" and "+var2+" for class 1");
+        mean_var[0]=mean1;
+        mean_var[1]=mean2;
+        mean_var[2]=var1;
+        mean_var[3]=var2;
+        return mean_var;
+}
+    static double[] Handle_Categorical(int size,double c0,double c1)
+    {
+        double c10=0,c11=0,c20=0,c21=0,c30=0,c31=0;
+        double[] prob_val= new double[10];
+        for(int i=0;i<size;i++)
+        {
+            if((rc[i].attr2.equals("S"))&&(rc[i].Class_label==0))
+            c10++;
+           if(rc[i].attr2.equals("S")&&(rc[i].Class_label==1))
+            c11++;
+            if((rc[i].attr2.equals("M"))&&(rc[i].Class_label==0))
+                c20++;
+            if((rc[i].attr2.equals("M"))&&(rc[i].Class_label==1))
+                c21++;
+            if((rc[i].attr2.equals("L"))&&(rc[i].Class_label==0))
+                c30++;
+            if((rc[i].attr2.equals("L"))&&(rc[i].Class_label==1))
+                c31++;
+        }
+        System.out.println(c10+" "+c11+" "+c20+" "+c21+" "+c30+" "+c31);
+        double prob_S_0 = c10/c0;
+        double prob_S_1 = c11/c1;
+        double prob_M_0 = c20/c0;
+        double prob_M_1 = c21/c1;
+        double prob_L_0 = c30/c0;
+        double prob_L_1 = c31/c1;
+        System.out.println("Probability of attribute value = S and class 0 is"+prob_S_0);
+        System.out.println("Probability of attribute value = S and class 1 is"+prob_S_1);
+        System.out.println("Probability of attribute value = M and class 0 is"+prob_M_0);
+        System.out.println("Probability of attribute value = M and class 1 is"+prob_M_1);
+        System.out.println("Probability of attribute value = L and class 0 is"+prob_L_0);
+        System.out.println("Probability of attribute value = L and class 1 is"+prob_L_1);
+        prob_val[0]=prob_S_0;
+        prob_val[1]=prob_S_1;
+        prob_val[2]=prob_M_0;
+        prob_val[3]=prob_M_1;
+        prob_val[4]=prob_L_0;
+        prob_val[5]=prob_L_1;
+        return prob_val;
+    }
+}
